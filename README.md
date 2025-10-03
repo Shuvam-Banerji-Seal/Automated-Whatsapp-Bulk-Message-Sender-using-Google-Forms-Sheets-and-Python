@@ -174,12 +174,35 @@ python whatsapp_bot.py --debug
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+**Additional Terms:**
+- If you use this project for events, organizations, or public purposes, please star ⭐ this repository and provide attribution as described in the Attribution section above.
+- Commercial use is permitted under MIT License terms, but attribution is appreciated.
+
 ## ⚠️ Disclaimer
 
 - This bot is for educational and legitimate business purposes only
 - Respect WhatsApp's Terms of Service and local regulations
 - Avoid spamming and respect recipient privacy
 - Use responsibly and ethically
+
+## 🙏 Attribution & Credits
+
+**If you use this project for your events, organizations, or any public purpose, please:**
+
+1. **⭐ Star this repository** - It helps others discover this project
+2. **📝 Give credit** - Mention this project in your documentation/announcements
+3. **🔗 Link back** - Include a link to this repository
+
+**Example credit format:**
+```
+WhatsApp messaging powered by: https://github.com/Shuvam-Banerji-Seal/Automated-Whatsapp-Bulk-Message-Sender-using-Google-Forms-Sheets-and-Python
+```
+
+**For academic/research use:** Please cite this repository in your work.
+
+**For commercial use:** Consider reaching out to discuss collaboration opportunities.
+
+Your support helps maintain and improve this project for everyone! 🚀
 
 ## 🤝 Contributing
 

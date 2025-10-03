@@ -52,3 +52,9 @@ python whatsapp_bot.py
 - Modify `message_file` in `whatsapp_bot.py`
 
 That's it! Happy messaging! 🎉
+
+---
+
+**🙏 Don't forget to ⭐ star this repo if it helped you with your project!**
+
+For detailed attribution guidelines, see [ATTRIBUTION.md](ATTRIBUTION.md)
