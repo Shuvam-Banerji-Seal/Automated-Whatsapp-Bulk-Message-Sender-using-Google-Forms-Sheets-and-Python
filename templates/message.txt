@@ -1,14 +1,22 @@
-Hello! 👋
+Hello {name}! 👋
 
-This is an automated WhatsApp message sent using Python and Selenium.
+This is an automated WhatsApp message sent on {datetime}.
 
 📌 Key Features:
 ✅ Send messages programmatically
-✅ Read message templates from files
-✅ Integrate with Google Sheets
+✅ Dynamic message templating with variables
+✅ Google Sheets integration (priority source)
+✅ CSV fallback support
 ✅ Bulk messaging capability
 
-Feel free to customize this message template!
+Message sent on {day}, {date} at {time}.
+
+Feel free to customize this message template with variables like:
+- {name} for recipient name
+- {date} for current date
+- {time} for current time
+- {day} for current day
+- {datetime} for full date and time
 
 Best regards,
 Your Automated Bot 🤖

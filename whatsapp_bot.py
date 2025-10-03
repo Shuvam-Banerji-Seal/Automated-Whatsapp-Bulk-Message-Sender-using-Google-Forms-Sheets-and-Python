@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -114,25 +115,65 @@ class WhatsAppBot:
             self.driver.get(url)
             print(f"Opening chat with {phone_number}...")
             
+            # Wait longer for the chat to fully load before looking for message box
+            print("🔄 Waiting for chat to load completely...")
+            time.sleep(8)  # Longer initial wait
+            
+            # Check if we're actually in a chat (not on error page)
+            try:
+                current_url = self.driver.current_url
+                if "web.whatsapp.com" not in current_url:
+                    print(f"❌ Invalid URL redirect: {current_url}")
+                    return False
+            except:
+                pass
+            
             # Wait for the message input box to appear with multiple possible selectors
+            # Avoid search box by being more specific about compose area
             message_box = None
             selectors = [
-                '//div[@contenteditable="true"][@data-tab="10"]',
-                '//div[@contenteditable="true"][@role="textbox"]',
-                '//div[contains(@class, "lexical-rich-text-input")]',
-                '//div[@title="Type a message"]',
-                '//div[@data-testid="conversation-compose-box-input"]'
+                '//div[@contenteditable="true"][@data-tab="10"]',  # Most specific for compose
+                '//div[contains(@class, "selectable-text")][@contenteditable="true"][@data-tab="10"]',
+                '//div[@data-testid="conversation-compose-box-input"]',
+                '//div[contains(@aria-label, "Type a message")][@contenteditable="true"]',
+                '//div[@title="Type a message"][@contenteditable="true"]',
+                '//div[contains(@class, "lexical-rich-text-input")][@contenteditable="true"]',
+                # Last resort, but exclude search (data-tab="3")
+                '//div[@contenteditable="true"][@role="textbox"][not(@data-tab="3")]'
             ]
             
-            for selector in selectors:
-                try:
-                    message_box = self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, selector)
-                    ))
-                    print(f"Found message box with selector: {selector}")
+            # Wait longer and try multiple times
+            print("🔍 Looking for message input box...")
+            for attempt in range(5):  # Increased attempts
+                for selector in selectors:
+                    try:
+                        # First check if element exists
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                        if elements:
+                            element = elements[0]
+                            data_tab = element.get_attribute('data-tab')
+                            
+                            # Skip search box (data-tab="3")
+                            if data_tab == '3':
+                                continue
+                                
+                            # Wait for element to become visible and clickable
+                            if element.is_displayed() and element.is_enabled():
+                                message_box = element
+                                print(f"✅ Found interactive message box: {selector} (data-tab: {data_tab})")
+                                break
+                            else:
+                                print(f"⚠️ Found element but not ready: displayed={element.is_displayed()}, enabled={element.is_enabled()}")
+                    except Exception as e:
+                        print(f"⚠️ Selector failed: {e}")
+                        continue
+                
+                if message_box is not None:
                     break
-                except:
-                    continue
+                    
+                if attempt < 4:
+                    print(f"🔄 Attempt {attempt + 1}/5: Waiting for chat interface...")
+                    time.sleep(4)  # Wait longer between attempts
             
             if message_box is None:
                 print(f"❌ Could not find message input box for {phone_number}")
@@ -208,6 +249,72 @@ class WhatsAppBot:
             print(f"Error reading Google Sheet: {e}")
             return None
     
+    def format_message_with_variables(self, message, name=None, phone=None):
+        """Format message template with dynamic variables"""
+        try:
+            # Get current time in various formats
+            now = datetime.now()
+            
+            # Replace variables in the message
+            formatted_message = message
+            
+            # Name variable
+            if name:
+                formatted_message = formatted_message.replace('{name}', str(name))
+                formatted_message = formatted_message.replace('{Name}', str(name))
+                formatted_message = formatted_message.replace('{NAME}', str(name).upper())
+            
+            # Time variables
+            formatted_message = formatted_message.replace('{time}', now.strftime('%H:%M'))
+            formatted_message = formatted_message.replace('{date}', now.strftime('%B %d, %Y'))
+            formatted_message = formatted_message.replace('{datetime}', now.strftime('%B %d, %Y at %H:%M'))
+            formatted_message = formatted_message.replace('{day}', now.strftime('%A'))
+            formatted_message = formatted_message.replace('{month}', now.strftime('%B'))
+            formatted_message = formatted_message.replace('{year}', now.strftime('%Y'))
+            
+            # Phone variable (if needed)
+            if phone:
+                formatted_message = formatted_message.replace('{phone}', str(phone))
+            
+            return formatted_message
+            
+        except Exception as e:
+            print(f"Error formatting message: {e}")
+            return message
+    
+    def format_message_with_variables(self, message, name=None, phone=None):
+        """Format message template with dynamic variables"""
+        try:
+            # Get current time in various formats
+            now = datetime.now()
+            
+            # Replace variables in the message
+            formatted_message = message
+            
+            # Name variable
+            if name:
+                formatted_message = formatted_message.replace('{name}', str(name))
+                formatted_message = formatted_message.replace('{Name}', str(name))
+                formatted_message = formatted_message.replace('{NAME}', str(name).upper())
+            
+            # Time variables
+            formatted_message = formatted_message.replace('{time}', now.strftime('%H:%M'))
+            formatted_message = formatted_message.replace('{date}', now.strftime('%B %d, %Y'))
+            formatted_message = formatted_message.replace('{datetime}', now.strftime('%B %d, %Y at %H:%M'))
+            formatted_message = formatted_message.replace('{day}', now.strftime('%A'))
+            formatted_message = formatted_message.replace('{month}', now.strftime('%B'))
+            formatted_message = formatted_message.replace('{year}', now.strftime('%Y'))
+            
+            # Phone variable (if needed)
+            if phone:
+                formatted_message = formatted_message.replace('{phone}', str(phone))
+            
+            return formatted_message
+            
+        except Exception as e:
+            print(f"Error formatting message: {e}")
+            return message
+
     def close(self):
         """Close the browser"""
         print("Closing browser...")
@@ -241,33 +348,37 @@ This is an automated message sent via Python + Selenium.
 Best regards,
 Your WhatsApp Bot"""
         
-        # Step 3: Read contacts and send messages
+        # Step 3: Read contacts - Prioritize Google Sheets
         data = None
         
-        # Try CSV file first (simpler option)
-        csv_file = "contacts.csv"
-        if not os.path.exists(csv_file):
-            csv_file = "examples/contacts_example.csv"  # Fallback to example
-            
-        if os.path.exists(csv_file):
-            print(f"📄 Reading contacts from {csv_file}...")
-            data = bot.read_csv_file(csv_file)
-            if csv_file == "examples/contacts_example.csv":
-                print("⚠️ Using example contacts. Create your own 'contacts.csv' file with real data.")
+        # First choice: Try Google Sheets (recommended)
+        sheet_id = "1-gSlQd7TgXHcBRUmO6Bg19zVzUCoPmMYiJo6LtmliLI"
+        credentials_file = "credentials.json"
         
-        # If no CSV or CSV failed, try Google Sheets
+        if os.path.exists(credentials_file):
+            print("� Reading contacts from Google Sheet (primary source)...")
+            data = bot.read_google_sheet(sheet_id, credentials_file)
+            if data:
+                print("✅ Successfully loaded contacts from Google Sheets")
+        else:
+            print("⚠️ No credentials.json found for Google Sheets.")
+        
+        # Fallback: Try CSV file if Google Sheets failed or unavailable
         if data is None:
-            sheet_id = "1-gSlQd7TgXHcBRUmO6Bg19zVzUCoPmMYiJo6LtmliLI"
-            credentials_file = "credentials.json"
-            
-            if os.path.exists(credentials_file):
-                print("📊 Reading contacts from Google Sheet...")
-                data = bot.read_google_sheet(sheet_id, credentials_file)
+            csv_file = "contacts.csv"
+            if not os.path.exists(csv_file):
+                csv_file = "examples/contacts_example.csv"  # Fallback to example
+                
+            if os.path.exists(csv_file):
+                print(f"� Reading contacts from {csv_file} (fallback source)...")
+                data = bot.read_csv_file(csv_file)
+                if csv_file == "examples/contacts_example.csv":
+                    print("⚠️ Using example contacts. Create your own 'contacts.csv' file with real data.")
             else:
-                print("❌ No credentials.json found for Google Sheets.")
+                print("❌ No contact sources available.")
                 print("💡 Options:")
-                print("   1. Create a 'contacts.csv' file with Name,Phone columns")
-                print("   2. Set up Google Sheets API (see GOOGLE_SHEETS_SETUP.md)")
+                print("   1. Set up Google Sheets API (recommended - see GOOGLE_SHEETS_SETUP.md)")
+                print("   2. Create a 'contacts.csv' file with Name,Phone columns")
         
         # Send messages if we have data
         if data and len(data) > 0:
@@ -275,14 +386,14 @@ Your WhatsApp Bot"""
             successful_sends = 0
             
             for i, row in enumerate(data, 1):
-                phone = row.get('Phone')  # Column name in your file
-                name = row.get('Name')    # Column name in your file
+                phone = str(row.get('Phone', '')).strip()  # Convert to string and strip whitespace
+                name = str(row.get('Name', '')).strip()    # Convert to string and strip whitespace
                 
-                if phone and name:
+                if phone and name and phone != 'nan':  # Check for valid data
                     print(f"\n📱 Sending message {i}/{len(data)} to {name} ({phone})")
                     
-                    # Personalize message
-                    personalized_msg = f"Hi {name}!\n\n" + message
+                    # Format message with dynamic variables
+                    personalized_msg = bot.format_message_with_variables(message, name=name, phone=phone)
                     
                     success = bot.send_message(phone, personalized_msg)
                     if success:
