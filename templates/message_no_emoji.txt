@@ -1,0 +1,14 @@
+Hello!
+
+This is an automated WhatsApp message sent using Python and Selenium.
+
+Key Features:
+- Send messages programmatically
+- Read message templates from files
+- Integrate with Google Sheets
+- Bulk messaging capability
+
+Feel free to customize this message template!
+
+Best regards,
+Your Automated Bot
